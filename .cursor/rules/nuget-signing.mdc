@@ -1,0 +1,8 @@
+---
+description: When signing assemblies for NuGet packages always follow these rules.
+globs: 
+alwaysApply: false
+---
+When signing assemblies for NuGet packages always follow these rules:
+
+https://learn.microsoft.com/en-us/nuget/reference/signed-packages-reference#signature-requirements-on-nugetorg

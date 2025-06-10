@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Cadtastic.JobHost.SDK</RootNamespace>
+    <AssemblyName>Cadtastic.JobHost.SDK</AssemblyName>
+    <Product>Cadtastic Job Host SDK</Product>
+    <Description>SDK containing interfaces and models for developing Cadtastic Jobs.</Description>
+    <Version>1.0.0</Version>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Authors>Cadtastic Solutions LLC</Authors>
+    <Copyright>Copyright © Cadtastic Solutions LLC</Copyright>
+    <PackageTags>cadtastic;sdk;cadtastic-job;job-hosting</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>

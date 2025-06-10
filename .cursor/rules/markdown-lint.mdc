@@ -1,0 +1,207 @@
+---
+description: Rules to follow when generating markdown files.
+globs: 
+alwaysApply: false
+---
+# Markdown Linting Rules
+
+## Overview
+
+This file contains rules for maintaining consistent and properly formatted Markdown documents that pass common linting tools.
+All markdown linting rules can be found here: https://github.com/DavidAnson/markdownlint/blob/v0.38.0/doc/Rules.md
+
+## Core Markdown Formatting Rules
+
+### MD022 - Headings should be surrounded by blank lines
+
+**Rule**: Always add blank lines before and after headings.
+
+**✅ Correct:**
+
+```markdown
+This is some text.
+
+## This is a heading
+
+This is more text.
+```
+
+**❌ Incorrect:**
+
+```markdown
+This is some text.
+## This is a heading
+This is more text.
+```
+
+### MD032 - Lists should be surrounded by blank lines
+
+**Rule**: Always add blank lines before and after lists.
+
+**✅ Correct:**
+
+```markdown
+This is some text.
+
+- List item 1
+- List item 2
+- List item 3
+
+This is more text.
+```
+
+**❌ Incorrect:**
+
+```markdown
+This is some text.
+- List item 1
+- List item 2
+- List item 3
+This is more text.
+```
+
+### MD031 - Fenced code blocks should be surrounded by blank lines
+
+**Rule**: Always add blank lines before and after fenced code blocks.
+
+**✅ Correct:**
+
+```markdown
+This is some text.
+
+```csharp
+public class Example
+{
+    // code here
+}
+```
+
+This is more text.
+```
+
+**❌ Incorrect:**
+
+```markdown
+This is some text.
+```csharp
+public class Example
+{
+    // code here
+}
+```
+This is more text.
+```
+
+### MD040 - Fenced code blocks should have a language specified
+
+**Rule**: Always specify the language for syntax highlighting in fenced code blocks.
+
+**✅ Correct:**
+
+````markdown
+```csharp
+public void Example() { }
+```
+
+```json
+{
+  "key": "value"
+}
+```
+
+```text
+Plain text content
+```
+````
+
+**❌ Incorrect:**
+
+````markdown
+```
+public void Example() { }
+```
+
+```
+{
+  "key": "value"
+}
+```
+````
+
+## Additional Markdown Best Practices
+
+### Line Length
+
+- Keep lines under 120 characters when possible
+- Break long lines at natural points (after commas, periods, etc.)
+
+### Consistent Formatting
+
+- Use consistent bullet characters (`-` preferred over `*` or `+`)
+- Use consistent heading styles (ATX style `#` preferred over Setext style)
+- Use consistent emphasis (`**bold**` and `*italic*` preferred)
+
+### Link Formatting
+
+- Use descriptive link text
+- Place reference-style links at the bottom of the document
+- Use angle brackets for automatic links: `<https://example.com>`
+
+### Table Formatting
+
+- Align table columns consistently
+- Include header separators with proper alignment indicators
+
+**✅ Correct:**
+
+```markdown
+| Column 1 | Column 2 | Column 3 |
+|----------|----------|----------|
+| Data 1   | Data 2   | Data 3   |
+| Data 4   | Data 5   | Data 6   |
+```
+
+## Implementation in Documents
+
+When creating or editing Markdown documents:
+
+1. **Always preview** your markdown to ensure proper rendering
+2. **Use a markdown linter** (like markdownlint) to catch formatting issues
+3. **Follow the blank line rules** consistently throughout the document
+4. **Specify languages** for all code blocks, even if it's just `text`
+5. **Structure content logically** with proper heading hierarchy
+
+## Common Language Identifiers for Code Blocks
+
+- `csharp` - C# code
+- `json` - JSON data
+- `xml` - XML markup
+- `yaml` - YAML configuration
+- `text` - Plain text
+- `markdown` - Markdown syntax examples
+- `powershell` - PowerShell commands
+- `sql` - SQL queries
+- `bash` - Bash/shell commands
+
+## Auto-fixing Tools
+
+Consider using these tools to automatically fix markdown formatting:
+
+- **markdownlint-cli2** - Command line linter with auto-fix
+- **Prettier** - Code formatter with markdown support
+- **VS Code extensions** - Real-time linting and formatting
+
+## Rule Exceptions
+
+In rare cases where these rules conflict with documentation requirements:
+
+1. **Document the exception** with a comment
+2. **Use HTML alternatives** when markdown limitations require it
+3. **Maintain consistency** within the same document
+4. **Prefer markdown syntax** over HTML when possible
+
+
+## Charts, Graphs, and Work-Flows
+
+Always use Mermaid for charts, graphs, and flow charts.
+

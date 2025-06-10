@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Always create or update XML Intellisense comments to ensure they align with the function or description of the code element.
