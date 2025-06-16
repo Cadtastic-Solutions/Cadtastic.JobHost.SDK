@@ -7,18 +7,45 @@
     <RootNamespace>Cadtastic.JobHost.SDK</RootNamespace>
     <AssemblyName>Cadtastic.JobHost.SDK</AssemblyName>
     <Product>Cadtastic Job Host SDK</Product>
-    <Description>SDK containing interfaces and models for developing Cadtastic Jobs.</Description>
+    <Description>SDK containing interfaces and models for developing Cadtastic jobs.</Description>
     <Version>1.0.0</Version>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Authors>Cadtastic Solutions LLC</Authors>
-    <Copyright>Copyright © Cadtastic Solutions LLC</Copyright>
-    <PackageTags>cadtastic;sdk;cadtastic-job;job-hosting</PackageTags>
+    <Copyright>Copyright ©2025 Cadtastic Solutions LLC</Copyright>
+    <PackageTags>job-hosting;sdk;cadtastic;job-execution</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
+    
+    <!-- Package metadata for NuGet -->
+    <PackageId>Cadtastic.JobHost.SDK</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>See https://github.com/Cadtastic-Solutions/Cadtastic.JobHost.SDK/releases for release notes.</PackageReleaseNotes>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    
+    <!-- Strong naming configuration -->
+    <SignAssembly Condition="Exists('_Local/Certs/Cadtastic.JobHost.SDK.snk')">true</SignAssembly>
+    <AssemblyOriginatorKeyFile Condition="Exists('_Local/Certs/Cadtastic.JobHost.SDK.snk')">_Local/Certs/Cadtastic.JobHost.SDK.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
   </PropertyGroup>
+
+  <!-- Include README in package -->
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="LICENSE.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
   </ItemGroup>
+
+  <!-- Post-build event to create and sign NuGet packages in Release mode -->
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Release'">
+    <!-- Create NuGet packages -->
+    <Exec Command="&quot;C:\Program Files\dotnet\dotnet.exe&quot; pack &quot;$(MSBuildProjectFile)&quot; --configuration $(Configuration) --no-build --output &quot;$(ProjectDir)_Local\Artifacts&quot;" ContinueOnError="false" />
+    
+    <!-- Sign NuGet packages if certificate exists -->
+    <Exec Command="powershell.exe -ExecutionPolicy Bypass -NonInteractive -NoProfile -File &quot;$(ProjectDir)_Local\sign-packages.ps1&quot;" ContinueOnError="true" />
+  </Target>
 
 </Project>

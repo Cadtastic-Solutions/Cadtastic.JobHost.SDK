@@ -3,75 +3,145 @@ using Cadtastic.JobHost.SDK.Interfaces;
 namespace Cadtastic.JobHost.SDK.Models;
 
 /// <summary>
-/// Represents job execution history with statistics and execution results.
-/// Implements <see cref="IJobExecutionHistory"/> to provide consistent history tracking.
+/// Represents the execution history of a job.
 /// </summary>
 public class JobExecutionHistory : IJobExecutionHistory
 {
-    /// <summary>
-    /// Gets or sets the collection of execution history records for jobs.
-    /// Contains all execution results in chronological order.
-    /// </summary>
-    public IEnumerable<IJobExecutionResult> Results { get; set; } = new List<IJobExecutionResult>();
+    private readonly List<IJobExecutionResult> _results = new();
 
     /// <summary>
-    /// Gets or sets the total number of job executions tracked in this history.
+    /// Gets the unique identifier of the job.
+    /// </summary>
+    public string JobId { get; }
+
+    /// <summary>
+    /// Gets the type of the job.
+    /// </summary>
+    public string JobType { get; }
+
+    /// <summary>
+    /// Gets the name of the job.
+    /// </summary>
+    public string JobName { get; }
+
+    /// <summary>
+    /// Gets or sets the list of execution results for the job.
+    /// </summary>
+    public IList<IJobExecutionResult> Results
+    {
+        get => _results;
+        set
+        {
+            _results.Clear();
+            if (value != null)
+                _results.AddRange(value);
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the total number of executions.
     /// </summary>
     public int TotalExecutions { get; set; }
 
     /// <summary>
-    /// Gets or sets the total number of successful job executions.
+    /// Gets or sets the total number of successful executions.
     /// </summary>
     public int TotalSucceeded { get; set; }
 
     /// <summary>
-    /// Gets or sets the total number of failed job executions.
+    /// Gets or sets the total number of failed executions.
     /// </summary>
     public int TotalFailed { get; set; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="JobExecutionHistory"/> class with empty history.
+    /// Gets the total number of successful executions.
     /// </summary>
-    public JobExecutionHistory()
+    public int SuccessCount => _results.Count(r => r.State == ResultState.Successful);
+
+    /// <summary>
+    /// Gets the total number of failed executions.
+    /// </summary>
+    public int FailureCount => _results.Count(r => r.State == ResultState.Failed);
+
+    /// <summary>
+    /// Gets the total number of cancelled executions.
+    /// </summary>
+    public int CancelledCount => _results.Count(r => r.State == ResultState.Cancelled);
+
+    /// <summary>
+    /// Gets the average duration of successful executions.
+    /// </summary>
+    public TimeSpan AverageDuration
     {
-        Results = new List<IJobExecutionResult>();
-        TotalExecutions = 0;
-        TotalSucceeded = 0;
-        TotalFailed = 0;
+        get
+        {
+            var successfulResults = _results.Where(r => r.State == ResultState.Successful).ToList();
+            if (!successfulResults.Any())
+                return TimeSpan.Zero;
+
+            return TimeSpan.FromTicks((long)successfulResults.Average(r => r.Duration?.Ticks ?? 0));
+        }
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="JobExecutionHistory"/> class with existing results.
+    /// Gets the last execution result.
     /// </summary>
-    /// <param name="existingResults">Existing execution results to initialize the history with.</param>
-    /// <exception cref="ArgumentNullException">Thrown when existingResults is null.</exception>
-    public JobExecutionHistory(IEnumerable<IJobExecutionResult> existingResults)
+    public IJobExecutionResult? LastResult => _results.LastOrDefault();
+
+    /// <summary>
+    /// Gets the last successful execution result.
+    /// </summary>
+    public IJobExecutionResult? LastSuccessfulResult => _results.LastOrDefault(r => r.State == ResultState.Successful);
+
+    /// <summary>
+    /// Gets the last failed execution result.
+    /// </summary>
+    public IJobExecutionResult? LastFailedResult => _results.LastOrDefault(r => r.State == ResultState.Failed);
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JobExecutionHistory"/> class.
+    /// </summary>
+    /// <param name="jobId">The unique identifier of the job.</param>
+    /// <param name="jobType">The type of the job.</param>
+    /// <param name="jobName">The name of the job.</param>
+    /// <exception cref="ArgumentNullException">Thrown when jobId, jobType, or jobName is null or empty.</exception>
+    public JobExecutionHistory(string jobId, string jobType, string jobName)
     {
-        ArgumentNullException.ThrowIfNull(existingResults);
+        if (string.IsNullOrEmpty(jobId))
+            throw new ArgumentNullException(nameof(jobId));
+        if (string.IsNullOrEmpty(jobType))
+            throw new ArgumentNullException(nameof(jobType));
+        if (string.IsNullOrEmpty(jobName))
+            throw new ArgumentNullException(nameof(jobName));
+
+        JobId = jobId;
+        JobType = jobType;
+        JobName = jobName;
+    }
+
+    /// <summary>
+    /// Adds an execution result to the history.
+    /// </summary>
+    /// <param name="result">The execution result to add.</param>
+    /// <exception cref="ArgumentNullException">Thrown when result is null.</exception>
+    public void AddResult(IJobExecutionResult result)
+    {
+        if (result == null)
+            throw new ArgumentNullException(nameof(result));
+
+        _results.Add(result);
+        TotalExecutions++;
         
-        Results = new List<IJobExecutionResult>(existingResults);
-        TotalExecutions = Results.Count();
-        TotalSucceeded = Results.Count(r => r.State == ResultState.Successful);
-        TotalFailed = Results.Count(r => r.State != ResultState.Successful);
-    }
-
-    /// <summary>
-    /// Creates a new empty job execution history instance.
-    /// </summary>
-    /// <returns>A new <see cref="JobExecutionHistory"/> instance with no execution records.</returns>
-    public static JobExecutionHistory Empty()
-    {
-        return new JobExecutionHistory();
-    }
-
-    /// <summary>
-    /// Creates a new job execution history instance from existing results.
-    /// </summary>
-    /// <param name="results">The execution results to create history from.</param>
-    /// <returns>A new <see cref="JobExecutionHistory"/> instance populated with the provided results.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when results is null.</exception>
-    public static JobExecutionHistory FromResults(IEnumerable<IJobExecutionResult> results)
-    {
-        return new JobExecutionHistory(results);
+        switch (result.State)
+        {
+            case ResultState.Successful:
+                TotalSucceeded++;
+                break;
+            case ResultState.Failed:
+            case ResultState.Cancelled:
+            case ResultState.Unknown:
+                TotalFailed++;
+                break;
+        }
     }
 } 

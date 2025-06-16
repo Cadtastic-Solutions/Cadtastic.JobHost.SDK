@@ -6,7 +6,8 @@ SDK for developing jobs that can be executed by the Cadtastic Job Host.
 
 ## Overview
 
-The Cadtastic Job Host SDK provides the essential interfaces and models needed to create job executors that can be dynamically loaded and executed by the Cadtastic Job Host. This ensures that all job implementations and the Job Host are always referencing the same exact interfaces.
+The Cadtastic Job Host SDK provides the essential interfaces and models needed to create jobs that can be dynamically loaded and executed by the Cadtastic Job Host. 
+This ensures that all job implementations and the Job Host are always referencing the same interfaces.
 
 ## Key Interfaces
 

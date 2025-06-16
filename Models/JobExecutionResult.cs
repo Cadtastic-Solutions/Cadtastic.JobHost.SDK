@@ -3,20 +3,84 @@ using Cadtastic.JobHost.SDK.Interfaces;
 namespace Cadtastic.JobHost.SDK.Models;
 
 /// <summary>
-/// Result of job execution with factory methods for easy creation.
-/// Implements <see cref="IJobExecutionResult"/> to provide consistent result handling.
+/// Represents the result of a job execution.
 /// </summary>
 public class JobExecutionResult : IJobExecutionResult
 {
     /// <summary>
+    /// Gets or sets the state of the job execution result.
+    /// </summary>
+    public ResultState State { get; set; }
+
+    /// <summary>
+    /// Gets or sets the message describing the result of the job execution.
+    /// </summary>
+    public string Message { get; set; }
+
+    /// <summary>
+    /// Gets or sets the exception that occurred during job execution, if any.
+    /// </summary>
+    public Exception? Exception { get; set; }
+
+    /// <summary>
+    /// Gets or sets the start time of the job execution.
+    /// </summary>
+    public DateTime StartTime { get; set; }
+
+    /// <summary>
+    /// Gets or sets the end time of the job execution.
+    /// </summary>
+    public DateTime? EndTime { get; set; }
+
+    /// <summary>
+    /// Gets the duration of the job execution.
+    /// </summary>
+    public TimeSpan? Duration => EndTime.HasValue ? EndTime.Value - StartTime : null;
+
+    /// <summary>
+    /// Gets or sets the additional data associated with the job execution result.
+    /// </summary>
+    public IDictionary<string, object> Data { get; set; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JobExecutionResult"/> class.
+    /// </summary>
+    public JobExecutionResult()
+    {
+        Message = string.Empty;
+        Data = new Dictionary<string, object>();
+        StartTime = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JobExecutionResult"/> class.
+    /// </summary>
+    /// <param name="state">The state of the job execution result.</param>
+    /// <param name="message">The message describing the result of the job execution.</param>
+    /// <param name="exception">The exception that occurred during job execution, if any.</param>
+    /// <param name="startTime">The start time of the job execution.</param>
+    /// <param name="endTime">The end time of the job execution.</param>
+    /// <param name="data">The additional data associated with the job execution result.</param>
+    public JobExecutionResult(
+        ResultState state,
+        string message,
+        Exception? exception = null,
+        DateTime? startTime = null,
+        DateTime? endTime = null,
+        IDictionary<string, object>? data = null)
+    {
+        State = state;
+        Message = message;
+        Exception = exception;
+        StartTime = startTime ?? DateTime.UtcNow;
+        EndTime = endTime;
+        Data = data ?? new Dictionary<string, object>();
+    }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the job execution was successful.
     /// </summary>
     public bool IsSuccess { get; set; }
-    
-    /// <summary>
-    /// Gets or sets the specific result state of the job execution.
-    /// </summary>
-    public ResultState State { get; set; }
     
     /// <summary>
     /// Gets or sets the error message if execution failed. Should be null for successful executions.
@@ -27,25 +91,6 @@ public class JobExecutionResult : IJobExecutionResult
     /// Gets or sets additional details about the execution, such as processing statistics or diagnostic information.
     /// </summary>
     public string? Details { get; set; }
-    
-    /// <summary>
-    /// Gets or sets when the execution started.
-    /// </summary>
-    public DateTime StartTime { get; set; }
-    
-    /// <summary>
-    /// Gets or sets when the execution ended.
-    /// </summary>
-    public DateTime EndTime { get; set; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="JobExecutionResult"/> class.
-    /// </summary>
-    public JobExecutionResult()
-    {
-        State = ResultState.Unknown;
-        IsSuccess = false;
-    }
 
     /// <summary>
     /// Creates a successful execution result with optional details and timing information.
@@ -149,10 +194,10 @@ public class JobExecutionResult : IJobExecutionResult
         return state switch
         {
             ResultState.Successful => Successful(details, startTime, endTime),
-            ResultState.Failed => Failed(errorMessage ?? "Job execution failed", details, startTime, endTime),
+            ResultState.Failed => Failed(errorMessage ?? "Job execution failed.", details, startTime, endTime),
             ResultState.Cancelled => Cancelled(details, startTime, endTime),
             ResultState.Unknown => Unknown(details, startTime, endTime),
-            _ => Unknown($"Invalid result state: {state}", startTime, endTime)
+            _ => Unknown($"Invalid result state: {state}.", startTime, endTime)
         };
     }
 } 
