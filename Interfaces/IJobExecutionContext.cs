@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace Cadtastic.JobHost.SDK.Interfaces;
 
 /// <summary>
@@ -16,6 +14,26 @@ public interface IJobExecutionContext
     /// Gets the execution history of the job.
     /// </summary>
     IJobExecutionHistory History { get; }
+
+    /// <summary>
+    /// Gets the current status of the job execution.
+    /// </summary>
+    JobStatus Status { get; }
+
+    /// <summary>
+    /// Gets the time when the job execution started.
+    /// </summary>
+    DateTime StartTime { get; }
+
+    /// <summary>
+    /// Gets the time when the job execution ended, or null if still running.
+    /// </summary>
+    DateTime? EndTime { get; }
+
+    /// <summary>
+    /// Gets the results of completed tasks in the job.
+    /// </summary>
+    IReadOnlyDictionary<string, ITaskResult> TaskResults { get; }
 
     /// <summary>
     /// Gets the data associated with the job execution.

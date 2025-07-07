@@ -3,201 +3,346 @@ using Cadtastic.JobHost.SDK.Interfaces;
 namespace Cadtastic.JobHost.SDK.Models;
 
 /// <summary>
-/// Represents the result of a job execution.
+/// Represents the result of a job execution, including success status, task results, and any errors that occurred.
+/// This class provides a comprehensive record of the job's execution outcome.
 /// </summary>
 public class JobExecutionResult : IJobExecutionResult
 {
     /// <summary>
-    /// Gets or sets the state of the job execution result.
+    /// Gets the unique identifier of the job.
     /// </summary>
-    public ResultState State { get; set; }
+    public string JobId { get; }
 
     /// <summary>
-    /// Gets or sets the message describing the result of the job execution.
+    /// Gets the type of the job.
     /// </summary>
-    public string Message { get; set; }
+    public string JobType { get; }
 
     /// <summary>
-    /// Gets or sets the exception that occurred during job execution, if any.
+    /// Gets a value indicating whether the job execution was successful.
     /// </summary>
-    public Exception? Exception { get; set; }
+    public bool IsSuccess { get; }
 
     /// <summary>
-    /// Gets or sets the start time of the job execution.
+    /// Gets the status of the job execution.
     /// </summary>
-    public DateTime StartTime { get; set; }
+    public JobStatus Status { get; }
 
     /// <summary>
-    /// Gets or sets the end time of the job execution.
+    /// Gets the error message if the job execution failed, or null if it succeeded.
     /// </summary>
-    public DateTime? EndTime { get; set; }
+    public string? ErrorMessage { get; }
+
+    /// <summary>
+    /// Gets the exception that caused the job execution to fail, if any.
+    /// </summary>
+    public Exception? Exception { get; }
+
+    /// <summary>
+    /// Gets the timestamp when the job execution started.
+    /// </summary>
+    public DateTimeOffset StartedAt { get; }
+
+    /// <summary>
+    /// Gets the timestamp when the job execution completed.
+    /// </summary>
+    public DateTimeOffset CompletedAt { get; }
 
     /// <summary>
     /// Gets the duration of the job execution.
     /// </summary>
-    public TimeSpan? Duration => EndTime.HasValue ? EndTime.Value - StartTime : null;
+    public TimeSpan Duration => CompletedAt - StartedAt;
 
     /// <summary>
-    /// Gets or sets the additional data associated with the job execution result.
+    /// Gets the results of all tasks in the job.
     /// </summary>
-    public IDictionary<string, object> Data { get; set; }
+    public IReadOnlyDictionary<string, ITaskResult> TaskResults { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="JobExecutionResult"/> class.
+    /// Gets a collection of validation errors that occurred during job execution, if any.
     /// </summary>
-    public JobExecutionResult()
+    public IReadOnlyCollection<string> ValidationErrors { get; }
+
+    /// <summary>
+    /// Gets the specific result state of the job execution.
+    /// </summary>
+    public ResultState State
     {
-        Message = string.Empty;
-        Data = new Dictionary<string, object>();
-        StartTime = DateTime.UtcNow;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="JobExecutionResult"/> class.
-    /// </summary>
-    /// <param name="state">The state of the job execution result.</param>
-    /// <param name="message">The message describing the result of the job execution.</param>
-    /// <param name="exception">The exception that occurred during job execution, if any.</param>
-    /// <param name="startTime">The start time of the job execution.</param>
-    /// <param name="endTime">The end time of the job execution.</param>
-    /// <param name="data">The additional data associated with the job execution result.</param>
-    public JobExecutionResult(
-        ResultState state,
-        string message,
-        Exception? exception = null,
-        DateTime? startTime = null,
-        DateTime? endTime = null,
-        IDictionary<string, object>? data = null)
-    {
-        State = state;
-        Message = message;
-        Exception = exception;
-        StartTime = startTime ?? DateTime.UtcNow;
-        EndTime = endTime;
-        Data = data ?? new Dictionary<string, object>();
-    }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether the job execution was successful.
-    /// </summary>
-    public bool IsSuccess { get; set; }
-    
-    /// <summary>
-    /// Gets or sets the error message if execution failed. Should be null for successful executions.
-    /// </summary>
-    public string? ErrorMessage { get; set; }
-    
-    /// <summary>
-    /// Gets or sets additional details about the execution, such as processing statistics or diagnostic information.
-    /// </summary>
-    public string? Details { get; set; }
-
-    /// <summary>
-    /// Creates a successful execution result with optional details and timing information.
-    /// </summary>
-    /// <param name="details">Optional details about the execution such as processing statistics.</param>
-    /// <param name="startTime">When execution started. Uses current time if not specified.</param>
-    /// <param name="endTime">When execution ended. Uses current time if not specified.</param>
-    /// <returns>A successful <see cref="JobExecutionResult"/> instance.</returns>
-    public static JobExecutionResult Successful(string? details = null, DateTime? startTime = null, DateTime? endTime = null)
-    {
-        var now = DateTime.Now;
-        return new JobExecutionResult
+        get
         {
-            IsSuccess = true,
-            State = ResultState.Successful,
-            Details = details,
-            StartTime = startTime ?? now,
-            EndTime = endTime ?? now
-        };
+            return Status switch
+            {
+                JobStatus.Completed => ResultState.Successful,
+                JobStatus.Failed => ResultState.Failed,
+                JobStatus.ValidationFailed => ResultState.Failed,
+                JobStatus.Cancelled => ResultState.Cancelled,
+                _ => ResultState.Unknown
+            };
+        }
     }
 
     /// <summary>
-    /// Creates a failed execution result with error information and timing details.
+    /// Gets additional details about the execution.
     /// </summary>
-    /// <param name="errorMessage">The error message describing what went wrong.</param>
-    /// <param name="details">Optional additional details such as stack trace or diagnostic information.</param>
-    /// <param name="startTime">When execution started. Uses current time if not specified.</param>
-    /// <param name="endTime">When execution ended. Uses current time if not specified.</param>
-    /// <returns>A failed <see cref="JobExecutionResult"/> instance.</returns>
-    /// <exception cref="ArgumentException">Thrown when errorMessage is null or empty.</exception>
-    public static JobExecutionResult Failed(string errorMessage, string? details = null, DateTime? startTime = null, DateTime? endTime = null)
+    public string? Details => ErrorMessage;
+
+    /// <summary>
+    /// Gets when the execution started.
+    /// </summary>
+    public DateTime StartTime => StartedAt.DateTime;
+
+    /// <summary>
+    /// Gets when the execution ended.
+    /// </summary>
+    public DateTime? EndTime => CompletedAt.DateTime;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JobExecutionResult"/> class.
+    /// </summary>
+    /// <param name="jobId">The unique identifier of the job.</param>
+    /// <param name="jobType">The type of the job.</param>
+    /// <param name="isSuccess">Whether the job execution was successful.</param>
+    /// <param name="status">The status of the job execution.</param>
+    /// <param name="errorMessage">The error message if the job execution failed.</param>
+    /// <param name="exception">The exception that caused the job execution to fail.</param>
+    /// <param name="startedAt">The timestamp when the job execution started.</param>
+    /// <param name="completedAt">The timestamp when the job execution completed.</param>
+    /// <param name="taskResults">A dictionary of task results from all tasks in the job.</param>
+    /// <param name="validationErrors">A collection of validation errors that occurred during job execution.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when any of the required parameters (jobId, jobType, taskResults, validationErrors) is null.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when jobId or jobType is empty or consists only of white-space characters.
+    /// </exception>
+    public JobExecutionResult(
+        string jobId,
+        string jobType,
+        bool isSuccess,
+        JobStatus status,
+        string? errorMessage,
+        Exception? exception,
+        DateTimeOffset startedAt,
+        DateTimeOffset completedAt,
+        IReadOnlyDictionary<string, ITaskResult> taskResults,
+        IReadOnlyCollection<string> validationErrors)
+    {
+        if (string.IsNullOrWhiteSpace(jobId))
+            throw new ArgumentException("Job ID cannot be null or empty.", nameof(jobId));
+        if (string.IsNullOrWhiteSpace(jobType))
+            throw new ArgumentException("Job type cannot be null or empty.", nameof(jobType));
+        if (taskResults == null)
+            throw new ArgumentNullException(nameof(taskResults));
+        if (validationErrors == null)
+            throw new ArgumentNullException(nameof(validationErrors));
+
+        JobId = jobId;
+        JobType = jobType;
+        IsSuccess = isSuccess;
+        Status = status;
+        ErrorMessage = errorMessage;
+        Exception = exception;
+        StartedAt = startedAt;
+        CompletedAt = completedAt;
+        TaskResults = taskResults;
+        ValidationErrors = validationErrors;
+    }
+
+    /// <summary>
+    /// Creates a successful job execution result.
+    /// </summary>
+    /// <param name="jobId">The unique identifier of the job.</param>
+    /// <param name="jobType">The type of the job.</param>
+    /// <param name="taskResults">A dictionary of task results from all tasks in the job.</param>
+    /// <param name="startedAt">The timestamp when the job execution started.</param>
+    /// <param name="completedAt">The timestamp when the job execution completed.</param>
+    /// <returns>A new <see cref="JobExecutionResult"/> instance representing a successful execution.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when any of the required parameters (jobId, jobType, taskResults) is null.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when jobId or jobType is empty or consists only of white-space characters.
+    /// </exception>
+    public static JobExecutionResult Success(
+        string jobId,
+        string jobType,
+        IReadOnlyDictionary<string, ITaskResult> taskResults,
+        DateTimeOffset startedAt,
+        DateTimeOffset completedAt)
+    {
+        return new JobExecutionResult(
+            jobId,
+            jobType,
+            isSuccess: true,
+            status: JobStatus.Completed,
+            errorMessage: null,
+            exception: null,
+            startedAt,
+            completedAt,
+            taskResults,
+            Array.Empty<string>());
+    }
+
+    /// <summary>
+    /// Creates a failed job execution result.
+    /// </summary>
+    /// <param name="jobId">The unique identifier of the job.</param>
+    /// <param name="jobType">The type of the job.</param>
+    /// <param name="errorMessage">The error message describing why the job failed.</param>
+    /// <param name="exception">The exception that caused the job to fail.</param>
+    /// <param name="taskResults">A dictionary of task results from all tasks in the job.</param>
+    /// <param name="startedAt">The timestamp when the job execution started.</param>
+    /// <param name="completedAt">The timestamp when the job execution completed.</param>
+    /// <returns>A new <see cref="JobExecutionResult"/> instance representing a failed execution.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when any of the required parameters (jobId, jobType, errorMessage, taskResults) is null.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when jobId or jobType is empty or consists only of white-space characters.
+    /// </exception>
+    public static JobExecutionResult Failure(
+        string jobId,
+        string jobType,
+        string errorMessage,
+        Exception? exception,
+        IReadOnlyDictionary<string, ITaskResult> taskResults,
+        DateTimeOffset startedAt,
+        DateTimeOffset completedAt)
     {
         if (string.IsNullOrWhiteSpace(errorMessage))
-            throw new ArgumentException("Error message cannot be null or empty for failed results.", nameof(errorMessage));
-            
-        var now = DateTime.Now;
-        return new JobExecutionResult
-        {
-            IsSuccess = false,
-            State = ResultState.Failed,
-            ErrorMessage = errorMessage,
-            Details = details,
-            StartTime = startTime ?? now,
-            EndTime = endTime ?? now
-        };
+            throw new ArgumentException("Error message cannot be null or empty.", nameof(errorMessage));
+
+        return new JobExecutionResult(
+            jobId,
+            jobType,
+            isSuccess: false,
+            status: JobStatus.Failed,
+            errorMessage,
+            exception,
+            startedAt,
+            completedAt,
+            taskResults,
+            Array.Empty<string>());
     }
 
     /// <summary>
-    /// Creates a cancelled execution result with optional details and timing information.
+    /// Creates a failed job execution result with validation errors.
+    /// </summary>
+    /// <param name="jobId">The unique identifier of the job.</param>
+    /// <param name="jobType">The type of the job.</param>
+    /// <param name="validationErrors">A collection of validation errors that occurred during job execution.</param>
+    /// <param name="taskResults">A dictionary of task results from all tasks in the job.</param>
+    /// <param name="startedAt">The timestamp when the job execution started.</param>
+    /// <param name="completedAt">The timestamp when the job execution completed.</param>
+    /// <returns>A new <see cref="JobExecutionResult"/> instance representing a failed execution.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when any of the required parameters (jobId, jobType, validationErrors, taskResults) is null.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when jobId or jobType is empty or consists only of white-space characters.
+    /// </exception>
+    public static JobExecutionResult ValidationFailure(
+        string jobId,
+        string jobType,
+        IReadOnlyCollection<string> validationErrors,
+        IReadOnlyDictionary<string, ITaskResult> taskResults,
+        DateTimeOffset startedAt,
+        DateTimeOffset completedAt)
+    {
+        if (validationErrors == null)
+            throw new ArgumentNullException(nameof(validationErrors));
+        if (validationErrors.Count == 0)
+            throw new ArgumentException("At least one validation error must be provided.", nameof(validationErrors));
+
+        return new JobExecutionResult(
+            jobId,
+            jobType,
+            isSuccess: false,
+            status: JobStatus.ValidationFailed,
+            errorMessage: "Validation failed",
+            exception: null,
+            startedAt,
+            completedAt,
+            taskResults,
+            validationErrors);
+    }
+
+    /// <summary>
+    /// Creates a successful job execution result with minimal parameters.
+    /// </summary>
+    /// <param name="details">Optional details about the successful execution.</param>
+    /// <param name="startTime">The start time of the execution.</param>
+    /// <param name="endTime">The end time of the execution.</param>
+    /// <returns>A new <see cref="JobExecutionResult"/> instance representing a successful execution.</returns>
+    public static JobExecutionResult Successful(string? details = null, DateTime? startTime = null, DateTime? endTime = null)
+    {
+        var now = DateTimeOffset.Now;
+        var start = startTime.HasValue ? new DateTimeOffset(startTime.Value) : now;
+        var end = endTime.HasValue ? new DateTimeOffset(endTime.Value) : now;
+
+        return new JobExecutionResult(
+            jobId: Guid.NewGuid().ToString(),
+            jobType: "Unknown",
+            isSuccess: true,
+            status: JobStatus.Completed,
+            errorMessage: null,
+            exception: null,
+            startedAt: start,
+            completedAt: end,
+            taskResults: new Dictionary<string, ITaskResult>(),
+            validationErrors: Array.Empty<string>());
+    }
+
+    /// <summary>
+    /// Creates a failed job execution result with minimal parameters.
+    /// </summary>
+    /// <param name="errorMessage">The error message describing the failure.</param>
+    /// <param name="details">Optional additional details about the failure.</param>
+    /// <param name="startTime">The start time of the execution.</param>
+    /// <param name="endTime">The end time of the execution.</param>
+    /// <returns>A new <see cref="JobExecutionResult"/> instance representing a failed execution.</returns>
+    public static JobExecutionResult Failed(string errorMessage, string? details = null, DateTime? startTime = null, DateTime? endTime = null)
+    {
+        var now = DateTimeOffset.Now;
+        var start = startTime.HasValue ? new DateTimeOffset(startTime.Value) : now;
+        var end = endTime.HasValue ? new DateTimeOffset(endTime.Value) : now;
+
+        return new JobExecutionResult(
+            jobId: Guid.NewGuid().ToString(),
+            jobType: "Unknown",
+            isSuccess: false,
+            status: JobStatus.Failed,
+            errorMessage: errorMessage,
+            exception: null,
+            startedAt: start,
+            completedAt: end,
+            taskResults: new Dictionary<string, ITaskResult>(),
+            validationErrors: Array.Empty<string>());
+    }
+
+    /// <summary>
+    /// Creates a cancelled job execution result with minimal parameters.
     /// </summary>
     /// <param name="details">Optional details about the cancellation.</param>
-    /// <param name="startTime">When execution started. Uses current time if not specified.</param>
-    /// <param name="endTime">When execution ended. Uses current time if not specified.</param>
-    /// <returns>A cancelled <see cref="JobExecutionResult"/> instance.</returns>
+    /// <param name="startTime">The start time of the execution.</param>
+    /// <param name="endTime">The end time of the execution.</param>
+    /// <returns>A new <see cref="JobExecutionResult"/> instance representing a cancelled execution.</returns>
     public static JobExecutionResult Cancelled(string? details = null, DateTime? startTime = null, DateTime? endTime = null)
     {
-        var now = DateTime.Now;
-        return new JobExecutionResult
-        {
-            IsSuccess = false,
-            State = ResultState.Cancelled,
-            ErrorMessage = "Job execution was cancelled",
-            Details = details,
-            StartTime = startTime ?? now,
-            EndTime = endTime ?? now
-        };
-    }
+        var now = DateTimeOffset.Now;
+        var start = startTime.HasValue ? new DateTimeOffset(startTime.Value) : now;
+        var end = endTime.HasValue ? new DateTimeOffset(endTime.Value) : now;
 
-    /// <summary>
-    /// Creates an unknown state execution result with optional details and timing information.
-    /// </summary>
-    /// <param name="details">Optional details about why the state is unknown.</param>
-    /// <param name="startTime">When execution started. Uses current time if not specified.</param>
-    /// <param name="endTime">When execution ended. Uses current time if not specified.</param>
-    /// <returns>An unknown state <see cref="JobExecutionResult"/> instance.</returns>
-    public static JobExecutionResult Unknown(string? details = null, DateTime? startTime = null, DateTime? endTime = null)
-    {
-        var now = DateTime.Now;
-        return new JobExecutionResult
-        {
-            IsSuccess = false,
-            State = ResultState.Unknown,
-            ErrorMessage = "Job execution result state is unknown",
-            Details = details,
-            StartTime = startTime ?? now,
-            EndTime = endTime ?? now
-        };
-    }
-
-    /// <summary>
-    /// Creates a job execution result from a specific result state.
-    /// </summary>
-    /// <param name="state">The result state to create a result for.</param>
-    /// <param name="details">Optional details about the execution.</param>
-    /// <param name="errorMessage">Optional error message (used for failed/cancelled/unknown states).</param>
-    /// <param name="startTime">When execution started. Uses current time if not specified.</param>
-    /// <param name="endTime">When execution ended. Uses current time if not specified.</param>
-    /// <returns>A <see cref="JobExecutionResult"/> instance with the specified state.</returns>
-    public static JobExecutionResult FromState(ResultState state, string? details = null, string? errorMessage = null, DateTime? startTime = null, DateTime? endTime = null)
-    {
-        return state switch
-        {
-            ResultState.Successful => Successful(details, startTime, endTime),
-            ResultState.Failed => Failed(errorMessage ?? "Job execution failed.", details, startTime, endTime),
-            ResultState.Cancelled => Cancelled(details, startTime, endTime),
-            ResultState.Unknown => Unknown(details, startTime, endTime),
-            _ => Unknown($"Invalid result state: {state}.", startTime, endTime)
-        };
+        return new JobExecutionResult(
+            jobId: Guid.NewGuid().ToString(),
+            jobType: "Unknown",
+            isSuccess: false,
+            status: JobStatus.Cancelled,
+            errorMessage: details ?? "Job execution was cancelled",
+            exception: null,
+            startedAt: start,
+            completedAt: end,
+            taskResults: new Dictionary<string, ITaskResult>(),
+            validationErrors: Array.Empty<string>());
     }
 } 

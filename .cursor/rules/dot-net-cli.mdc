@@ -3,7 +3,7 @@ description:
 globs: 
 alwaysApply: true
 ---
-When running dot net commands make sure we are calling the full path ti the .net executable `C:\Program Files\dotnet\dotnet.exe`.
+# DotNet Compiler
 
-
-Otherwise a ~Select Program to Use~ dialog will display and cuase issues.
+When running .Net (dotnet) compiler or build commands make sure we are calling the full path to the .net executable in Powershell format: 
+  & `C:\Program Files\dotnet\dotnet.exe`

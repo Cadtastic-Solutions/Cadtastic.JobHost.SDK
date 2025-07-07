@@ -1,11 +1,10 @@
 using Cadtastic.JobHost.SDK.Interfaces;
 
-using Microsoft.Extensions.Logging;
-
 namespace Cadtastic.JobHost.SDK.Models;
 
 /// <summary>
-/// Represents the context in which a job is executed.
+/// Provides context and state information for a job during its execution.
+/// This class contains all the necessary information and utilities that a job needs to perform its work.
 /// </summary>
 /// <remarks>
 /// Initializes a new instance of the <see cref="JobExecutionContext"/> class.
@@ -61,6 +60,26 @@ public class JobExecutionContext(
     /// Gets the progress reporter for the job execution.
     /// </summary>
     public IProgress<string>? Progress { get; } = progress;
+
+    /// <summary>
+    /// Gets the current status of the job execution.
+    /// </summary>
+    public JobStatus Status { get; private set; } = JobStatus.Pending;
+
+    /// <summary>
+    /// Gets the time when the job execution started.
+    /// </summary>
+    public DateTime StartTime { get; private set; } = DateTime.Now;
+
+    /// <summary>
+    /// Gets the time when the job execution ended, or null if still running.
+    /// </summary>
+    public DateTime? EndTime { get; private set; }
+
+    /// <summary>
+    /// Gets the results of completed tasks in the job.
+    /// </summary>
+    public IReadOnlyDictionary<string, ITaskResult> TaskResults { get; private set; } = new Dictionary<string, ITaskResult>();
 
     /// <summary>
     /// Adds data to the job execution context.

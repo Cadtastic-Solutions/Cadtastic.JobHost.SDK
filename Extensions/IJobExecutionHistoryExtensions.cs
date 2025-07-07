@@ -2,10 +2,9 @@
 
 namespace Cadtastic.JobHost.SDK.Extensions
 {
-
     /// <summary>
-    /// Extension methods for <see cref="IJobExecutionHistory"/> to provide convenient access
-    /// to history management and statistical operations.
+    /// Provides extension methods for working with job execution history.
+    /// These extensions add convenience methods for analyzing and querying job execution history.
     /// </summary>
     public static class IJobExecutionHistoryExtensions
     {
@@ -180,6 +179,212 @@ namespace Cadtastic.JobHost.SDK.Extensions
                 return 0.0;
 
             return (double)history.TotalSucceeded / history.TotalExecutions * 100.0;
+        }
+
+        /// <summary>
+        /// Gets a collection of job execution results that occurred within the specified time range.
+        /// </summary>
+        /// <param name="history">The job execution history to query.</param>
+        /// <param name="startTime">The start time of the range (inclusive).</param>
+        /// <param name="endTime">The end time of the range (inclusive).</param>
+        /// <returns>A collection of job execution results within the specified time range.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when history is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when endTime is before startTime.</exception>
+        public static IEnumerable<IJobExecutionResult> GetResultsInTimeRange(
+            this IJobExecutionHistory history,
+            DateTimeOffset startTime,
+            DateTimeOffset endTime)
+        {
+            if (history == null)
+                throw new ArgumentNullException(nameof(history));
+            if (endTime < startTime)
+                throw new ArgumentException("End time must be after start time.", nameof(endTime));
+
+            return history.Results
+                .Where(r => r.StartedAt >= startTime && r.CompletedAt <= endTime);
+        }
+
+        /// <summary>
+        /// Gets a collection of job execution results for a specific job type.
+        /// </summary>
+        /// <param name="history">The job execution history to query.</param>
+        /// <param name="jobType">The type of job to get results for.</param>
+        /// <returns>A collection of job execution results for the specified job type.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when history or jobType is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when jobType is empty.</exception>
+        public static IEnumerable<IJobExecutionResult> GetResultsByJobType(
+            this IJobExecutionHistory history,
+            string jobType)
+        {
+            if (history == null)
+                throw new ArgumentNullException(nameof(history));
+            if (string.IsNullOrEmpty(jobType))
+                throw new ArgumentException("Job type cannot be null or empty.", nameof(jobType));
+
+            return history.Results
+                .Where(r => r.JobType == jobType);
+        }
+
+        /// <summary>
+        /// Gets the most recent job execution result.
+        /// </summary>
+        /// <param name="history">The job execution history to query.</param>
+        /// <returns>The most recent job execution result, or null if no results exist.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when history is null.</exception>
+        public static IJobExecutionResult? GetMostRecentResult(this IJobExecutionHistory history)
+        {
+            if (history == null)
+                throw new ArgumentNullException(nameof(history));
+
+            return history.Results
+                .OrderByDescending(r => r.CompletedAt)
+                .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Gets the most recent job execution result for a specific job type.
+        /// </summary>
+        /// <param name="history">The job execution history to query.</param>
+        /// <param name="jobType">The type of job to get the most recent result for.</param>
+        /// <returns>The most recent job execution result for the specified job type, or null if no results exist.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when history or jobType is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when jobType is empty.</exception>
+        public static IJobExecutionResult? GetMostRecentResultByJobType(
+            this IJobExecutionHistory history,
+            string jobType)
+        {
+            if (history == null)
+                throw new ArgumentNullException(nameof(history));
+            if (string.IsNullOrEmpty(jobType))
+                throw new ArgumentException("Job type cannot be null or empty.", nameof(jobType));
+
+            return history.Results
+                .Where(r => r.JobType == jobType)
+                .OrderByDescending(r => r.CompletedAt)
+                .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Gets the success rate of job executions for a specific job type as a percentage.
+        /// </summary>
+        /// <param name="history">The job execution history to calculate success rate from.</param>
+        /// <param name="jobType">The type of job to calculate success rate for.</param>
+        /// <returns>The success rate as a percentage (0-100), or 0 if no results exist.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when history or jobType is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when jobType is empty.</exception>
+        public static double GetSuccessRateByJobType(
+            this IJobExecutionHistory history,
+            string jobType)
+        {
+            if (history == null)
+                throw new ArgumentNullException(nameof(history));
+            if (string.IsNullOrEmpty(jobType))
+                throw new ArgumentException("Job type cannot be null or empty.", nameof(jobType));
+
+            var results = history.Results
+                .Where(r => r.JobType == jobType)
+                .ToList();
+
+            if (!results.Any())
+                return 0;
+
+            var successfulResults = results.Count(r => r.State == ResultState.Successful);
+            return (double)successfulResults / results.Count * 100;
+        }
+
+        /// <summary>
+        /// Gets the average duration of job executions.
+        /// </summary>
+        /// <param name="history">The job execution history to calculate average duration from.</param>
+        /// <returns>The average duration of job executions, or TimeSpan.Zero if no results exist.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when history is null.</exception>
+        public static TimeSpan GetAverageDuration(this IJobExecutionHistory history)
+        {
+            if (history == null)
+                throw new ArgumentNullException(nameof(history));
+
+            var results = history.Results.ToList();
+            if (!results.Any())
+                return TimeSpan.Zero;
+
+            var totalDuration = results.Sum(r => r.Duration?.Ticks ?? 0);
+            return TimeSpan.FromTicks(totalDuration / results.Count);
+        }
+
+        /// <summary>
+        /// Gets the average duration of job executions for a specific job type.
+        /// </summary>
+        /// <param name="history">The job execution history to calculate average duration from.</param>
+        /// <param name="jobType">The type of job to calculate average duration for.</param>
+        /// <returns>The average duration of job executions, or TimeSpan.Zero if no results exist.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when history or jobType is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when jobType is empty.</exception>
+        public static TimeSpan GetAverageDurationByJobType(
+            this IJobExecutionHistory history,
+            string jobType)
+        {
+            if (history == null)
+                throw new ArgumentNullException(nameof(history));
+            if (string.IsNullOrEmpty(jobType))
+                throw new ArgumentException("Job type cannot be null or empty.", nameof(jobType));
+
+            var results = history.Results
+                .Where(r => r.JobType == jobType)
+                .ToList();
+
+            if (!results.Any())
+                return TimeSpan.Zero;
+
+            var totalDuration = results.Sum(r => r.Duration?.Ticks ?? 0);
+            return TimeSpan.FromTicks(totalDuration / results.Count);
+        }
+
+        /// <summary>
+        /// Gets the longest duration of any job execution.
+        /// </summary>
+        /// <param name="history">The job execution history to find the longest duration from.</param>
+        /// <returns>The longest duration of any job execution, or TimeSpan.Zero if no results exist.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when history is null.</exception>
+        public static TimeSpan GetLongestDuration(this IJobExecutionHistory history)
+        {
+            if (history == null)
+                throw new ArgumentNullException(nameof(history));
+
+            return history.Results
+                .Select(r => r.Duration ?? TimeSpan.Zero)
+                .DefaultIfEmpty(TimeSpan.Zero)
+                .Max();
+        }
+
+        /// <summary>
+        /// Gets the shortest duration of any job execution.
+        /// </summary>
+        /// <param name="history">The job execution history to find the shortest duration from.</param>
+        /// <returns>The shortest duration of any job execution, or TimeSpan.Zero if no results exist.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when history is null.</exception>
+        public static TimeSpan GetShortestDuration(this IJobExecutionHistory history)
+        {
+            if (history == null)
+                throw new ArgumentNullException(nameof(history));
+
+            return history.Results
+                .Select(r => r.Duration ?? TimeSpan.Zero)
+                .DefaultIfEmpty(TimeSpan.Zero)
+                .Min();
+        }
+
+        /// <summary>
+        /// Gets the total number of job executions.
+        /// </summary>
+        /// <param name="history">The job execution history to count executions from.</param>
+        /// <returns>The total number of job executions.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when history is null.</exception>
+        public static int GetTotalExecutionCount(this IJobExecutionHistory history)
+        {
+            if (history == null)
+                throw new ArgumentNullException(nameof(history));
+
+            return history.Results.Count;
         }
     }
 }

@@ -2,10 +2,9 @@
 
 namespace Cadtastic.JobHost.SDK.Extensions
 {
-
     /// <summary>
-    /// Extension methods for <see cref="IJobExecutionResult"/> to provide convenient access
-    /// to result state analysis and validation.
+    /// Provides extension methods for working with job execution results.
+    /// These extensions add convenience methods for common operations on job execution results.
     /// </summary>
     public static class IJobExecutionResultExtensions
     {
@@ -100,6 +99,168 @@ namespace Cadtastic.JobHost.SDK.Extensions
         {
             ArgumentNullException.ThrowIfNull(result);
             return result.State == ResultState.Failed || result.State == ResultState.Unknown;
+        }
+
+        /// <summary>
+        /// Gets the total duration of all tasks in the job execution result.
+        /// </summary>
+        /// <param name="result">The job execution result to calculate task durations from.</param>
+        /// <returns>The total duration of all tasks, or TimeSpan.Zero if no tasks were executed.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when result is null.</exception>
+        public static TimeSpan GetTotalTaskDuration(this IJobExecutionResult result)
+        {
+            if (result == null)
+                throw new ArgumentNullException(nameof(result));
+
+            return result.TaskResults.Values
+                .Select(t => t.Duration)
+                .Aggregate(TimeSpan.Zero, (total, duration) => total + duration);
+        }
+
+        /// <summary>
+        /// Gets the average duration of all tasks in the job execution result.
+        /// </summary>
+        /// <param name="result">The job execution result to calculate average task duration from.</param>
+        /// <returns>The average duration of all tasks, or TimeSpan.Zero if no tasks were executed.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when result is null.</exception>
+        public static TimeSpan GetAverageTaskDuration(this IJobExecutionResult result)
+        {
+            if (result == null)
+                throw new ArgumentNullException(nameof(result));
+
+            var taskResults = result.TaskResults.Values.ToList();
+            if (!taskResults.Any())
+                return TimeSpan.Zero;
+
+            var totalDuration = taskResults.Sum(t => t.Duration.Ticks);
+            return TimeSpan.FromTicks(totalDuration / taskResults.Count);
+        }
+
+        /// <summary>
+        /// Gets the duration of the longest task in the job execution result.
+        /// </summary>
+        /// <param name="result">The job execution result to find the longest task duration from.</param>
+        /// <returns>The duration of the longest task, or TimeSpan.Zero if no tasks were executed.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when result is null.</exception>
+        public static TimeSpan GetLongestTaskDuration(this IJobExecutionResult result)
+        {
+            if (result == null)
+                throw new ArgumentNullException(nameof(result));
+
+            return result.TaskResults.Values
+                .Select(t => t.Duration)
+                .DefaultIfEmpty(TimeSpan.Zero)
+                .Max();
+        }
+
+        /// <summary>
+        /// Gets the duration of the shortest task in the job execution result.
+        /// </summary>
+        /// <param name="result">The job execution result to find the shortest task duration from.</param>
+        /// <returns>The duration of the shortest task, or TimeSpan.Zero if no tasks were executed.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when result is null.</exception>
+        public static TimeSpan GetShortestTaskDuration(this IJobExecutionResult result)
+        {
+            if (result == null)
+                throw new ArgumentNullException(nameof(result));
+
+            return result.TaskResults.Values
+                .Select(t => t.Duration)
+                .DefaultIfEmpty(TimeSpan.Zero)
+                .Min();
+        }
+
+        /// <summary>
+        /// Gets a collection of task results that failed during execution.
+        /// </summary>
+        /// <param name="result">The job execution result to get failed tasks from.</param>
+        /// <returns>A collection of task results that failed, or an empty collection if no tasks failed.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when result is null.</exception>
+        public static IEnumerable<ITaskResult> GetFailedTasks(this IJobExecutionResult result)
+        {
+            if (result == null)
+                throw new ArgumentNullException(nameof(result));
+
+            return result.TaskResults.Values
+                .Where(t => !t.IsSuccess);
+        }
+
+        /// <summary>
+        /// Gets a collection of task results that succeeded during execution.
+        /// </summary>
+        /// <param name="result">The job execution result to get successful tasks from.</param>
+        /// <returns>A collection of task results that succeeded, or an empty collection if no tasks succeeded.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when result is null.</exception>
+        public static IEnumerable<ITaskResult> GetSuccessfulTasks(this IJobExecutionResult result)
+        {
+            if (result == null)
+                throw new ArgumentNullException(nameof(result));
+
+            return result.TaskResults.Values
+                .Where(t => t.IsSuccess);
+        }
+
+        /// <summary>
+        /// Gets the number of tasks that failed during execution.
+        /// </summary>
+        /// <param name="result">The job execution result to count failed tasks from.</param>
+        /// <returns>The number of tasks that failed.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when result is null.</exception>
+        public static int GetFailedTaskCount(this IJobExecutionResult result)
+        {
+            if (result == null)
+                throw new ArgumentNullException(nameof(result));
+
+            return result.TaskResults.Values
+                .Count(t => !t.IsSuccess);
+        }
+
+        /// <summary>
+        /// Gets the number of tasks that succeeded during execution.
+        /// </summary>
+        /// <param name="result">The job execution result to count successful tasks from.</param>
+        /// <returns>The number of tasks that succeeded.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when result is null.</exception>
+        public static int GetSuccessfulTaskCount(this IJobExecutionResult result)
+        {
+            if (result == null)
+                throw new ArgumentNullException(nameof(result));
+
+            return result.TaskResults.Values
+                .Count(t => t.IsSuccess);
+        }
+
+        /// <summary>
+        /// Gets the total number of tasks in the job execution result.
+        /// </summary>
+        /// <param name="result">The job execution result to count tasks from.</param>
+        /// <returns>The total number of tasks.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when result is null.</exception>
+        public static int GetTotalTaskCount(this IJobExecutionResult result)
+        {
+            if (result == null)
+                throw new ArgumentNullException(nameof(result));
+
+            return result.TaskResults.Count;
+        }
+
+        /// <summary>
+        /// Gets the success rate of tasks in the job execution result as a percentage.
+        /// </summary>
+        /// <param name="result">The job execution result to calculate success rate from.</param>
+        /// <returns>The success rate as a percentage (0-100), or 0 if no tasks were executed.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when result is null.</exception>
+        public static double GetTaskSuccessRate(this IJobExecutionResult result)
+        {
+            if (result == null)
+                throw new ArgumentNullException(nameof(result));
+
+            var totalTasks = result.GetTotalTaskCount();
+            if (totalTasks == 0)
+                return 0;
+
+            var successfulTasks = result.GetSuccessfulTaskCount();
+            return (double)successfulTasks / totalTasks * 100;
         }
     }
 }

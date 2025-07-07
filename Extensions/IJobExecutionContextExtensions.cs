@@ -1,15 +1,210 @@
 ﻿using Cadtastic.JobHost.SDK.Interfaces;
 
-using Microsoft.Extensions.Logging;
-
 namespace Cadtastic.JobHost.SDK.Extensions
 {
     /// <summary>
-    /// Extension methods for <see cref="IJobExecutionContext"/> to provide convenient access
-    /// to commonly used services and functionality.
+    /// Provides extension methods for working with job execution contexts.
+    /// These extensions add convenience methods for common operations on job execution contexts.
     /// </summary>
     public static class IJobExecutionContextExtensions
     {
+        /// <summary>
+        /// Gets a value indicating whether the job execution has been cancelled.
+        /// </summary>
+        /// <param name="context">The job execution context to check.</param>
+        /// <returns>True if the job execution has been cancelled; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+        public static bool IsCancelled(this IJobExecutionContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            return context.CancellationToken.IsCancellationRequested;
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the job execution has completed.
+        /// </summary>
+        /// <param name="context">The job execution context to check.</param>
+        /// <returns>True if the job execution has completed; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+        public static bool IsCompleted(this IJobExecutionContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            return context.Status == JobStatus.Completed || 
+                   context.Status == JobStatus.Failed || 
+                   context.Status == JobStatus.Cancelled;
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the job execution is in progress.
+        /// </summary>
+        /// <param name="context">The job execution context to check.</param>
+        /// <returns>True if the job execution is in progress; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+        public static bool IsInProgress(this IJobExecutionContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            return context.Status == JobStatus.Running;
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the job execution is waiting to start.
+        /// </summary>
+        /// <param name="context">The job execution context to check.</param>
+        /// <returns>True if the job execution is waiting to start; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+        public static bool IsWaiting(this IJobExecutionContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            return context.Status == JobStatus.Waiting;
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the job execution has failed.
+        /// </summary>
+        /// <param name="context">The job execution context to check.</param>
+        /// <returns>True if the job execution has failed; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+        public static bool HasFailed(this IJobExecutionContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            return context.Status == JobStatus.Failed;
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the job execution has succeeded.
+        /// </summary>
+        /// <param name="context">The job execution context to check.</param>
+        /// <returns>True if the job execution has succeeded; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+        public static bool HasSucceeded(this IJobExecutionContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            return context.Status == JobStatus.Completed;
+        }
+
+        /// <summary>
+        /// Gets the duration of the job execution so far.
+        /// </summary>
+        /// <param name="context">The job execution context to get duration from.</param>
+        /// <returns>The duration of the job execution, or TimeSpan.Zero if not started.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+        public static TimeSpan GetDuration(this IJobExecutionContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            if (context.StartTime == default(DateTime))
+                return TimeSpan.Zero;
+
+            var endTime = context.EndTime ?? DateTime.UtcNow;
+            return endTime - context.StartTime;
+        }
+
+        /// <summary>
+        /// Gets a collection of task results that have completed.
+        /// </summary>
+        /// <param name="context">The job execution context to get completed tasks from.</param>
+        /// <returns>A collection of completed task results.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+        public static IEnumerable<ITaskResult> GetCompletedTasks(this IJobExecutionContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            return context.TaskResults.Values
+                .Where(t => t.IsCompleted);
+        }
+
+        /// <summary>
+        /// Gets a collection of task results that are still pending.
+        /// </summary>
+        /// <param name="context">The job execution context to get pending tasks from.</param>
+        /// <returns>A collection of pending task results.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+        public static IEnumerable<ITaskResult> GetPendingTasks(this IJobExecutionContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            return context.TaskResults.Values
+                .Where(t => !t.IsCompleted);
+        }
+
+        /// <summary>
+        /// Gets the number of tasks that have completed.
+        /// </summary>
+        /// <param name="context">The job execution context to count completed tasks from.</param>
+        /// <returns>The number of completed tasks.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+        public static int GetCompletedTaskCount(this IJobExecutionContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            return context.TaskResults.Values
+                .Count(t => t.IsCompleted);
+        }
+
+        /// <summary>
+        /// Gets the number of tasks that are still pending.
+        /// </summary>
+        /// <param name="context">The job execution context to count pending tasks from.</param>
+        /// <returns>The number of pending tasks.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+        public static int GetPendingTaskCount(this IJobExecutionContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            return context.TaskResults.Values
+                .Count(t => !t.IsCompleted);
+        }
+
+        /// <summary>
+        /// Gets the total number of tasks in the job execution context.
+        /// </summary>
+        /// <param name="context">The job execution context to count tasks from.</param>
+        /// <returns>The total number of tasks.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+        public static int GetTotalTaskCount(this IJobExecutionContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            return context.TaskResults.Count;
+        }
+
+        /// <summary>
+        /// Gets the completion rate of tasks in the job execution context as a percentage.
+        /// </summary>
+        /// <param name="context">The job execution context to calculate completion rate from.</param>
+        /// <returns>The completion rate as a percentage (0-100), or 0 if no tasks exist.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+        public static double GetTaskCompletionRate(this IJobExecutionContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            var totalTasks = context.GetTotalTaskCount();
+            if (totalTasks == 0)
+                return 0;
+
+            var completedTasks = context.GetCompletedTaskCount();
+            return (double)completedTasks / totalTasks * 100;
+        }
+
         /// <summary>
         /// Gets a typed logger for the specified type from the execution context.
         /// </summary>

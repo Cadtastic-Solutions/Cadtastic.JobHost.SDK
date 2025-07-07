@@ -65,4 +65,29 @@ public interface IJobExecutionResult
     /// Duration of the execution
     /// </summary>
     TimeSpan? Duration => (EndTime - StartTime);
+
+    /// <summary>
+    /// Gets the results of all tasks that were executed as part of this job.
+    /// </summary>
+    IReadOnlyDictionary<string, ITaskResult> TaskResults { get; }
+
+    /// <summary>
+    /// Gets the unique identifier of the job that was executed.
+    /// </summary>
+    string JobId { get; }
+
+    /// <summary>
+    /// Gets the type of the job that was executed.
+    /// </summary>
+    string JobType { get; }
+
+    /// <summary>
+    /// Gets when the job execution started.
+    /// </summary>
+    DateTimeOffset StartedAt { get; }
+
+    /// <summary>
+    /// Gets when the job execution completed.
+    /// </summary>
+    DateTimeOffset CompletedAt { get; }
 }

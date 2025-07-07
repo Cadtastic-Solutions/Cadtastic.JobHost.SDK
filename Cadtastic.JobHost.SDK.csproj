@@ -27,6 +27,8 @@
     <SignAssembly Condition="Exists('_Local/Certs/Cadtastic.JobHost.SDK.snk')">true</SignAssembly>
     <AssemblyOriginatorKeyFile Condition="Exists('_Local/Certs/Cadtastic.JobHost.SDK.snk')">_Local/Certs/Cadtastic.JobHost.SDK.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Cadtastic.JobHost.SDK</Title>
   </PropertyGroup>
 
   <!-- Include README in package -->
