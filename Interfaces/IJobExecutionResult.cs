@@ -1,93 +1,83 @@
 namespace Cadtastic.JobHost.SDK.Interfaces;
 
 /// <summary>
-/// Represents the result state of a job execution.
-/// </summary>
-public enum ResultState
-{
-    /// <summary>
-    /// The job execution failed due to an error.
-    /// </summary>
-    Failed = 0,
-
-    /// <summary>
-    /// The job execution completed successfully.
-    /// </summary>
-    Successful = 1,
-
-    /// <summary>
-    /// The job execution was cancelled before completion.
-    /// </summary>
-    Cancelled = 2,
-
-    /// <summary>
-    /// The job execution result state is unknown or cannot be determined.
-    /// </summary>
-    Unknown = 4
-}
-
-/// <summary>
-/// Result of job execution
+/// Represents the result of a complete job execution.
 /// </summary>
 public interface IJobExecutionResult
 {
     /// <summary>
-    /// Whether the job execution was successful
+    /// Gets the unique identifier of the job execution.
     /// </summary>
-    bool IsSuccess { get; }
+    string ExecutionId { get; }
 
     /// <summary>
-    /// The specific result state of the job execution
-    /// </summary>
-    ResultState State { get; }
-
-    /// <summary>
-    /// Error message if execution failed
-    /// </summary>
-    string? ErrorMessage { get; }
-
-    /// <summary>
-    /// Additional details about the execution
-    /// </summary>
-    string? Details { get; }
-
-    /// <summary>
-    /// When the execution started
-    /// </summary>
-    DateTime StartTime { get; }
-
-    /// <summary>
-    /// When the execution ended
-    /// </summary>
-    DateTime? EndTime { get; }
-
-    /// <summary>
-    /// Duration of the execution
-    /// </summary>
-    TimeSpan? Duration => (EndTime - StartTime);
-
-    /// <summary>
-    /// Gets the results of all tasks that were executed as part of this job.
-    /// </summary>
-    IReadOnlyDictionary<string, ITaskResult> TaskResults { get; }
-
-    /// <summary>
-    /// Gets the unique identifier of the job that was executed.
+    /// Gets the job identifier.
     /// </summary>
     string JobId { get; }
 
     /// <summary>
-    /// Gets the type of the job that was executed.
+    /// Gets the job type.
     /// </summary>
     string JobType { get; }
 
     /// <summary>
-    /// Gets when the job execution started.
+    /// Gets a value indicating whether the job execution was successful.
     /// </summary>
-    DateTimeOffset StartedAt { get; }
+    bool IsSuccess { get; }
 
     /// <summary>
-    /// Gets when the job execution completed.
+    /// Gets the overall status of the job execution.
     /// </summary>
-    DateTimeOffset CompletedAt { get; }
+    JobExecutionStatus Status { get; }
+
+    /// <summary>
+    /// Gets the error message if the job failed.
+    /// </summary>
+    string? ErrorMessage { get; }
+
+    /// <summary>
+    /// Gets the exception if the job failed with an exception.
+    /// </summary>
+    Exception? Exception { get; }
+
+    /// <summary>
+    /// Gets when the job execution started.
+    /// </summary>
+    DateTime StartTime { get; }
+
+    /// <summary>
+    /// Gets when the job execution ended.
+    /// </summary>
+    DateTime EndTime { get; }
+
+    /// <summary>
+    /// Gets the duration of the job execution.
+    /// </summary>
+    TimeSpan Duration { get; }
+
+    /// <summary>
+    /// Gets the collection of task results from this job execution.
+    /// Key is the task ID, value is the task result.
+    /// </summary>
+    IReadOnlyDictionary<string, ITaskResult> TaskResults { get; }
+
+    /// <summary>
+    /// Gets the count of successful tasks.
+    /// </summary>
+    int SuccessfulTaskCount { get; }
+
+    /// <summary>
+    /// Gets the count of failed tasks.
+    /// </summary>
+    int FailedTaskCount { get; }
+
+    /// <summary>
+    /// Gets the total count of tasks executed.
+    /// </summary>
+    int TotalTaskCount { get; }
+
+    /// <summary>
+    /// Gets the execution history record for this job execution.
+    /// </summary>
+    IJobExecutionHistory ExecutionHistory { get; }
 }

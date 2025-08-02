@@ -1,81 +1,119 @@
 ﻿namespace Cadtastic.JobHost.SDK.Interfaces;
 
 /// <summary>
-/// Interface for tracking job execution history and statistics.
-/// Provides methods to store and query historical job execution results.
-/// </summary>
-/// <summary>
-/// Represents the execution history of a job.
+/// Represents the execution history of a job, including all task results.
 /// </summary>
 public interface IJobExecutionHistory
 {
     /// <summary>
-    /// Gets the unique identifier of the job.
+    /// Gets the unique identifier of the job execution.
+    /// </summary>
+    string ExecutionId { get; }
+
+    /// <summary>
+    /// Gets the job identifier.
     /// </summary>
     string JobId { get; }
 
     /// <summary>
-    /// Gets the type of the job.
-    /// </summary>
-    string JobType { get; }
-
-    /// <summary>
-    /// Gets the name of the job.
+    /// Gets the job name.
     /// </summary>
     string JobName { get; }
 
     /// <summary>
-    /// Gets or sets the list of execution results for the job.
+    /// Gets the job type.
     /// </summary>
-    IList<IJobExecutionResult> Results { get; set; }
+    string JobType { get; }
 
     /// <summary>
-    /// Gets or sets the total number of executions.
+    /// Gets when the job execution started.
     /// </summary>
-    int TotalExecutions { get; set; }
+    DateTime StartTime { get; }
 
     /// <summary>
-    /// Gets or sets the total number of successful executions.
+    /// Gets when the job execution ended.
+    /// Null if the job is still running.
     /// </summary>
-    int TotalSucceeded { get; set; }
+    DateTime? EndTime { get; }
 
     /// <summary>
-    /// Gets or sets the total number of failed executions.
+    /// Gets the duration of the job execution.
+    /// Null if the job is still running.
     /// </summary>
-    int TotalFailed { get; set; }
+    TimeSpan? Duration { get; }
 
     /// <summary>
-    /// Gets the total number of successful executions.
+    /// Gets the overall status of the job execution.
     /// </summary>
-    int SuccessCount { get; }
+    JobExecutionStatus Status { get; }
 
     /// <summary>
-    /// Gets the total number of failed executions.
+    /// Gets the error message if the job failed.
     /// </summary>
-    int FailureCount { get; }
+    string? ErrorMessage { get; }
 
     /// <summary>
-    /// Gets the total number of cancelled executions.
+    /// Gets the collection of task results from this job execution.
+    /// Key is the task ID, value is the task result.
     /// </summary>
-    int CancelledCount { get; }
+    IReadOnlyDictionary<string, ITaskResult> TaskResults { get; }
 
     /// <summary>
-    /// Gets the average duration of successful executions.
+    /// Gets the count of successful tasks.
     /// </summary>
-    TimeSpan AverageDuration { get; }
+    int SuccessfulTaskCount { get; }
 
     /// <summary>
-    /// Gets the last execution result.
+    /// Gets the count of failed tasks.
     /// </summary>
-    IJobExecutionResult? LastResult { get; }
+    int FailedTaskCount { get; }
 
     /// <summary>
-    /// Gets the last successful execution result.
+    /// Gets the total count of tasks executed.
     /// </summary>
-    IJobExecutionResult? LastSuccessfulResult { get; }
+    int TotalTaskCount { get; }
 
     /// <summary>
-    /// Gets the last failed execution result.
+    /// Adds a task result to the execution history.
     /// </summary>
-    IJobExecutionResult? LastFailedResult { get; }
+    /// <param name="taskResult">The task result to add.</param>
+    void AddTaskResult(ITaskResult taskResult);
+
+    /// <summary>
+    /// Marks the job execution as completed.
+    /// </summary>
+    /// <param name="status">The final status of the job.</param>
+    /// <param name="errorMessage">Optional error message if the job failed.</param>
+    void Complete(JobExecutionStatus status, string? errorMessage = null);
+}
+
+/// <summary>
+/// Represents the status of a job execution.
+/// </summary>
+public enum JobExecutionStatus
+{
+    /// <summary>
+    /// The job is currently running.
+    /// </summary>
+    Running = 0,
+
+    /// <summary>
+    /// The job completed successfully.
+    /// </summary>
+    Success = 1,
+
+    /// <summary>
+    /// The job failed to complete.
+    /// </summary>
+    Failed = 2,
+
+    /// <summary>
+    /// The job was cancelled.
+    /// </summary>
+    Cancelled = 3,
+
+    /// <summary>
+    /// The job completed with warnings.
+    /// </summary>
+    CompletedWithWarnings = 4
 }

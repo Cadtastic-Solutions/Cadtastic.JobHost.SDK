@@ -141,68 +141,68 @@ public interface ITaskContext
 
 ### Task Design
 
-1. **Single Responsibility**
-   - Each task should do one thing well
-   - Keep tasks focused and maintainable
-   - Use clear, descriptive names
+1. Single Responsibility
+   - 1.1 Each task should do one thing well
+   - 1.2 Keep tasks focused and maintainable
+   - 1.3 Use clear, descriptive names
 
-2. **Dependency Management**
-   - Minimize dependencies
-   - Avoid circular dependencies
-   - Use type-safe dependency declarations
+2. Dependency Management
+   - 2.1 Minimize dependencies
+   - 2.2 Avoid circular dependencies
+   - 2.3 Use type-safe dependency declarations
 
-3. **Error Handling**
-   - Implement proper error handling
-   - Use meaningful error messages
-   - Consider task criticality
+3. Error Handling
+   - 3.1 Implement proper error handling
+   - 3.2 Use meaningful error messages
+   - 3.3 Consider task criticality
 
-4. **Performance**
-   - Use async/await properly
-   - Consider task concurrency
-   - Optimize resource usage
+4. Performance
+   - 4.1 Use async/await properly
+   - 4.2 Consider task concurrency
+   - 4.3 Optimize resource usage
 
 ### Module Organization
 
-1. **Task Grouping**
-   - Group related tasks
-   - Use consistent naming
-   - Maintain clear boundaries
+1. Task Grouping
+   - 1.1 Group related tasks
+   - 1.2 Use consistent naming
+   - 1.3 Maintain clear boundaries
 
-2. **Exposure Control**
-   - Expose only necessary tasks
-   - Use internal tasks when appropriate
-   - Document public tasks
+2. Exposure Control
+   - 2.1 Expose only necessary tasks
+   - 2.2 Use internal tasks when appropriate
+   - 2.3 Document public tasks
 
 ## Development Guidelines
 
 ### Code Style
 
-1. **Naming Conventions**
-   - Use PascalCase for public members
-   - Use camelCase for private members
-   - Use descriptive names
+1. Naming Conventions
+   - 1.1 Use PascalCase for public members
+   - 1.2 Use camelCase for private members
+   - 1.3 Use descriptive names
 
-2. **Documentation**
-   - Document all public members
-   - Use XML comments
-   - Include examples
+2. Documentation
+   - 2.1 Document all public members
+   - 2.2 Use XML comments
+   - 2.3 Include examples
 
-3. **Error Handling**
-   - Use custom exceptions
-   - Provide meaningful messages
-   - Handle all error cases
+3. Error Handling
+   - 3.1 Use custom exceptions
+   - 3.2 Provide meaningful messages
+   - 3.3 Handle all error cases
 
 ### Testing
 
-1. **Unit Testing**
-   - Test individual tasks
-   - Mock dependencies
-   - Test error cases
+1. Unit Testing
+   - 1.1 Test individual tasks
+   - 1.2 Mock dependencies
+   - 1.3 Test error cases
 
-2. **Integration Testing**
-   - Test task interactions
-   - Test module loading
-   - Test error handling
+2. Integration Testing
+   - 2.1 Test task interactions
+   - 2.2 Test module loading
+   - 2.3 Test error handling
 
 ## API Reference
 
@@ -277,4 +277,4 @@ public class Job : IJob
 
 ## License
 
-[License information here] 
+[License information here]  

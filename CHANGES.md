@@ -1,4 +1,76 @@
-# Cadtastic.JobHost.SDK Changes
+# Cadtastic JobHost SDK Changes
+
+## Version 1.2.0 - Major Architecture Refactoring (07-11-2025)
+
+### Breaking Changes - Complete Interface Restructuring
+
+#### Removed Interfaces
+
+- **IJobModule** - Merged functionality into IJob interface
+- **IJobExecutionContext** - Replaced by IJobContext
+
+#### Removed Models
+
+- **JobExecutionContext** - Use new context interfaces instead
+- **JobExecutionHistory** - Use interface-based approach
+- **JobExecutionResult** - Use interface-based approach  
+- **JobStatus** - Replaced by JobState enum in IJob
+- **TaskStatus** - Task status determined by ITaskResult.IsSuccess
+- **JobExecutionStatus** (duplicate) - Defined in IJobExecutionHistory
+
+#### Removed Base Classes
+
+- **JobModuleBase** - No longer needed with simplified architecture
+- **TaskContext** - Doesn't match new ITaskContext interface
+- **TaskResult** - Doesn't match new ITaskResult interface
+
+#### Removed Extensions
+
+- **IJobExecutionContextExtensions** - For obsolete interface
+- **ITaskExecutorExtensions** - Used obsolete attribute approach
+- **IJobExecutionHistoryExtensions** - For old implementation
+- **IJobExecutionResultExtensions** - For old implementation
+
+#### Removed Helpers
+
+- **TaskDependency** - Used Type-based dependencies (now string-based)
+
+### New Architecture
+
+#### Core Interfaces
+
+1. **IJob** - Main registerable unit (combines old IJob + IJobModule)
+   - RegisterServices()
+   - GetExecutor()
+   - ValidateConfiguration()
+
+2. **IJobExecutor** - Entry point for job execution
+   - GetTasks()
+   - ExecuteAsync(IJobContext, CancellationToken)
+
+3. **ITaskExecutor** - Individual task execution
+   - Step property for ordering
+   - String-based Dependencies
+   - CanRunConcurrently for same-step parallelism
+
+4. **Context System**
+   - IJobContext - Job-level context with CancellationToken
+   - ITaskContext - Task-level context with previous results
+
+5. **Results & History**
+   - IJobExecutionResult - Overall job result
+   - ITaskResult - Individual task results with data passing
+   - IJobExecutionHistory - Complete execution record
+
+### Key Improvements
+
+- Simplified structure without redundant interfaces
+- Clear execution flow: Job → Executor → Tasks
+- Proper cancellation support throughout
+- Flexible task ordering (sequential & concurrent)
+- Complete history tracking at all levels
+
+## Version 1.1.0
 
 ## Overview
 
@@ -9,6 +81,7 @@ This document summarizes the changes made to the Cadtastic.JobHost.SDK to improv
 ### Extensions
 
 #### IJobExecutorExtensions
+
 - Enhanced class summary and documentation
 - Added comprehensive XML comments for all methods
 - Added utility methods for:
@@ -19,6 +92,7 @@ This document summarizes the changes made to the Cadtastic.JobHost.SDK to improv
   - Task execution status (executable, blocked)
 
 #### IServiceProviderExtensions
+
 - Enhanced class summary and documentation
 - Added comprehensive XML comments for all methods
 - Improved logger creation methods with:
@@ -33,6 +107,7 @@ This document summarizes the changes made to the Cadtastic.JobHost.SDK to improv
 ### Helpers
 
 #### TaskDependency
+
 - Enhanced class summary and documentation
 - Added comprehensive XML comments for all methods
 - Added utility methods for:
@@ -49,6 +124,7 @@ This document summarizes the changes made to the Cadtastic.JobHost.SDK to improv
 ### Base Classes
 
 #### JobModuleBase
+
 - Enhanced class summary and documentation
 - Added comprehensive XML comments for all methods
 - Improved task execution management with:
@@ -64,24 +140,28 @@ This document summarizes the changes made to the Cadtastic.JobHost.SDK to improv
 ## General Improvements
 
 ### Documentation
+
 - Added detailed XML comments for all public and protected members
 - Improved method and parameter descriptions
 - Added exception documentation
 - Enhanced class summaries
 
 ### Error Handling
+
 - Added proper parameter validation with null checks
 - Improved exception handling and logging
 - Added validation for task dependencies
 - Enhanced error reporting
 
 ### Code Quality
+
 - Improved code organization and structure
 - Enhanced type safety
 - Added thread safety where needed
 - Improved method naming and consistency
 
 ### Performance
+
 - Optimized task execution algorithms
 - Improved dependency tracking
 - Enhanced parallel execution support
@@ -93,4 +173,4 @@ This document summarizes the changes made to the Cadtastic.JobHost.SDK to improv
 2. Evaluate the need for additional extension methods
 3. Consider adding more logging options and configurations
 4. Review the possibility of adding more task execution strategies
-5. Consider adding more helper methods for common task patterns 
+5. Consider adding more helper methods for common task patterns

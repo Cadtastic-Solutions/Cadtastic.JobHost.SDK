@@ -194,4 +194,4 @@ graph TD
 5. Results are tracked and stored for each task
 6. Logging is comprehensive and categorized
 7. Service provider is used for dependency injection
-8. All operations are asynchronous where appropriate 
+8. All operations are asynchronous where appropriate  
